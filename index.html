@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chemická hra – deriváty uhlovodíků</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --border: #dbe3ee;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --error: #dc2626;
+      --error-bg: #fee2e2;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .game-card,
+    .result-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .badge {
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    h1, h2 {
+      margin-top: 0;
+    }
+
+    .question-box {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .image-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 280px;
+      background: #f8fafc;
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .question-image {
+      max-width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .answers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .answer-btn {
+      flex: 1 1 calc(50% - 12px);
+      min-width: 220px;
+      border: 2px solid var(--border);
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      text-align: left;
+      color: var(--text);
+    }
+
+    .answer-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      border-color: #93c5fd;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.10);
+    }
+
+    .answer-btn:disabled {
+      cursor: default;
+      opacity: 1;
+    }
+
+    .answer-btn.correct {
+      background: var(--success-bg);
+      border-color: var(--success);
+      color: #166534;
+    }
+
+    .answer-btn.wrong {
+      background: var(--error-bg);
+      border-color: var(--error);
+      color: #991b1b;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .feedback {
+      min-height: 24px;
+      font-weight: 700;
+    }
+
+    .feedback.correct {
+      color: var(--success);
+    }
+
+    .feedback.wrong {
+      color: var(--error);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .final-score {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .result-item {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      background: #fbfdff;
+    }
+
+    .result-thumb {
+      width: 120px;
+      min-width: 120px;
+      height: 90px;
+      object-fit: contain;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 8px;
+    }
+
+    .result-content {
+      flex: 1;
+    }
+
+    .result-status {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .result-status.correct {
+      color: var(--success);
+    }
+
+    .result-status.wrong {
+      color: var(--error);
+    }
+
+    .result-text {
+      margin: 4px 0;
+      line-height: 1.5;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .empty-image-note {
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .app {
+        padding: 14px;
+      }
+
+      .game-card,
+      .result-card {
+        padding: 18px;
+      }
+
+      .answers {
+        flex-direction: column;
+      }
+
+      .answer-btn {
+        flex: 1 1 100%;
+        min-width: 100%;
+      }
+
+      .result-item {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .result-thumb {
+        width: 100%;
+        height: 160px;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section id="gameScreen" class="game-card">
+      <div class="topbar">
+        <div class="badge" id="progress">Otázka 1 / 10</div>
+        <div class="badge" id="score">Skóre: 0</div>
+        <div class="badge">Každá kategorie právě 1×</div>
+      </div>
+
+      <h1>Poznej funkční skupinu</h1>
+
+      <div class="question-box">
+        <div class="image-wrap">
+          <img id="questionImage" class="question-image" src="" alt="Vzorec sloučeniny">
+          <div id="imageFallback" class="empty-image-note hidden">
+            Obrázek se nepodařilo načíst.<br>
+            Zkontrolujte název souboru a cestu v poli <strong>questionsData</strong>.
+          </div>
+        </div>
+
+        <div id="answers" class="answers"></div>
+
+        <div class="controls">
+          <div id="feedback" class="feedback"></div>
+          <button id="nextBtn" class="btn btn-primary" disabled>Další</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="result-card hidden">
+      <h2>Konec hry</h2>
+      <div id="finalScore" class="final-score"></div>
+      <p class="muted">Přehled všech 10 otázek:</p>
+      <div id="resultsList" class="results-list"></div>
+      <div style="margin-top: 22px;">
+        <button id="restartBtn" class="btn btn-primary">Hrát znovu</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const fixedAnswers = [
+      "halogenderiváty",
+      "nitroderiváty",
+      "primární aminy",
+      "sekundární aminy",
+      "terciární aminy",
+      "hydroxyderiváty (alkoholy)",
+      "ethery",
+      "aldehydy",
+      "ketony",
+      "karboxylové kyseliny"
+    ];
+
+    // Upravte cestu ke složce podle umístění souborů.
+    // Pokud jsou SVG ve stejné složce jako index.html, smažte prefix "derivaty uhlovodiku/".
+    const questionsData = [
+      { image: "derivaty uhlovodiku/halogenderivat_1.svg", correct: 0 },
+      { image: "derivaty uhlovodiku/halogenderivat_2.svg", correct: 0 },
+
+      { image: "derivaty uhlovodiku/nitroderivat_1.svg", correct: 1 },
+      { image: "derivaty uhlovodiku/nitroderivat_2.svg", correct: 1 },
+
+      { image: "derivaty uhlovodiku/primarni_amin_1.svg", correct: 2 },
+      { image: "derivaty uhlovodiku/primarni_amin_2.svg", correct: 2 },
+
+      { image: "derivaty uhlovodiku/sekundarni_amin_1.svg", correct: 3 },
+      { image: "derivaty uhlovodiku/sekundarni_amin_2.svg", correct: 3 },
+
+      { image: "derivaty uhlovodiku/terciarni_amin_1.svg", correct: 4 },
+      { image: "derivaty uhlovodiku/terciarni_amin_2.svg", correct: 4 },
+
+      { image: "derivaty uhlovodiku/alkohol_1.svg", correct: 5 },
+      { image: "derivaty uhlovodiku/alkohol_2.svg", correct: 5 },
+
+      { image: "derivaty uhlovodiku/ether_1.svg", correct: 6 },
+      { image: "derivaty uhlovodiku/ether_2.svg", correct: 6 },
+
+      { image: "derivaty uhlovodiku/aldehyd_1.svg", correct: 7 },
+      { image: "derivaty uhlovodiku/aldehyd_2.svg", correct: 7 },
+
+      { image: "derivaty uhlovodiku/keton_1.svg", correct: 8 },
+      { image: "derivaty uhlovodiku/keton_2.svg", correct: 8 },
+
+      { image: "derivaty uhlovodiku/karboxylova_kyselina_1.svg", correct: 9 },
+      { image: "derivaty uhlovodiku/karboxylova_kyselina_2.svg", correct: 9 }
+    ];
+
+    let gameQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let answered = false;
+    let summary = [];
+
+    const gameScreen = document.getElementById("gameScreen");
+    const resultScreen = document.getElementById("resultScreen");
+    const progressEl = document.getElementById("progress");
+    const scoreEl = document.getElementById("score");
+    const questionImage = document.getElementById("questionImage");
+    const imageFallback = document.getElementById("imageFallback");
+    const answersEl = document.getElementById("answers");
+    const feedbackEl = document.getElementById("feedback");
+    const nextBtn = document.getElementById("nextBtn");
+    const finalScoreEl = document.getElementById("finalScore");
+    const resultsListEl = document.getElementById("resultsList");
+    const restartBtn = document.getElementById("restartBtn");
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function chooseRandomItem(array) {
+      const index = Math.floor(Math.random() * array.length);
+      return array[index];
+    }
+
+    function prepareQuestions() {
+      const groupedByCorrect = {};
+
+      questionsData.forEach((question) => {
+        if (!groupedByCorrect[question.correct]) {
+          groupedByCorrect[question.correct] = [];
+        }
+        groupedByCorrect[question.correct].push(question);
+      });
+
+      const selectedQuestions = [];
+
+      for (let correctIndex = 0; correctIndex < fixedAnswers.length; correctIndex++) {
+        const group = groupedByCorrect[correctIndex];
+
+        if (group && group.length > 0) {
+          selectedQuestions.push(chooseRandomItem(group));
+        }
+      }
+
+      gameQuestions = shuffleArray(selectedQuestions);
+    }
+
+    function updateHeader() {
+      progressEl.textContent = `Otázka ${currentIndex + 1} / ${gameQuestions.length}`;
+      scoreEl.textContent = `Skóre: ${score}`;
+    }
+
+    function renderQuestion() {
+      answered = false;
+      nextBtn.disabled = true;
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+      answersEl.innerHTML = "";
+
+      const question = gameQuestions[currentIndex];
+
+      questionImage.onerror = null;
+      questionImage.src = question.image;
+      questionImage.alt = `Vzorec – otázka ${currentIndex + 1}`;
+      questionImage.classList.remove("hidden");
+      imageFallback.classList.add("hidden");
+
+      questionImage.onerror = function () {
+        questionImage.classList.add("hidden");
+        imageFallback.classList.remove("hidden");
+      };
+
+      updateHeader();
+
+      fixedAnswers.forEach((text, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "answer-btn";
+        button.textContent = text;
+        button.addEventListener("click", () => handleAnswer(index, button));
+        answersEl.appendChild(button);
+      });
+    }
+
+    function handleAnswer(selectedIndex, selectedButton) {
+      if (answered) return;
+
+      answered = true;
+      nextBtn.disabled = false;
+
+      const question = gameQuestions[currentIndex];
+      const buttons = [...document.querySelectorAll(".answer-btn")];
+      const isCorrect = selectedIndex === question.correct;
+
+      buttons.forEach((btn) => {
+        btn.disabled = true;
+      });
+
+      if (isCorrect) {
+        selectedButton.classList.add("correct");
+        feedbackEl.textContent = "Správně!";
+        feedbackEl.className = "feedback correct";
+        score++;
+        scoreEl.textContent = `Skóre: ${score}`;
+      } else {
+        selectedButton.classList.add("wrong");
+        buttons[question.correct].classList.add("correct");
+        feedbackEl.textContent = `Špatně. Správně je: ${fixedAnswers[question.correct]}`;
+        feedbackEl.className = "feedback wrong";
+      }
+
+      summary.push({
+        image: question.image,
+        isCorrect: isCorrect,
+        selectedText: fixedAnswers[selectedIndex],
+        correctText: fixedAnswers[question.correct]
+      });
+    }
+
+    function showResults() {
+      gameScreen.classList.add("hidden");
+      resultScreen.classList.remove("hidden");
+
+      finalScoreEl.textContent = `Výsledek: ${score} / ${gameQuestions.length}`;
+      resultsListEl.innerHTML = "";
+
+      summary.forEach((item, index) => {
+        const resultItem = document.createElement("div");
+        resultItem.className = "result-item";
+
+        const img = document.createElement("img");
+        img.className = "result-thumb";
+        img.src = item.image;
+        img.alt = `Otázka ${index + 1}`;
+        img.onerror = function () {
+          this.style.display = "none";
+        };
+
+        const content = document.createElement("div");
+        content.className = "result-content";
+
+        const status = document.createElement("div");
+        status.className = `result-status ${item.isCorrect ? "correct" : "wrong"}`;
+        status.textContent = item.isCorrect
+          ? `✔ Otázka ${index + 1} – správně`
+          : `✖ Otázka ${index + 1} – špatně`;
+
+        const selected = document.createElement("p");
+        selected.className = "result-text";
+
+        if (item.isCorrect) {
+          selected.innerHTML = `<strong>Vaše odpověď:</strong> ✔ ${item.selectedText}`;
+        } else {
+          selected.innerHTML = `<strong>Vaše odpověď:</strong> ✖ ${item.selectedText} <span class="muted">(správně: ${item.correctText})</span>`;
+        }
+
+        content.appendChild(status);
+        content.appendChild(selected);
+
+        resultItem.appendChild(img);
+        resultItem.appendChild(content);
+
+        resultsListEl.appendChild(resultItem);
+      });
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+
+      if (currentIndex >= gameQuestions.length) {
+        showResults();
+      } else {
+        renderQuestion();
+      }
+    }
+
+    function startGame() {
+      currentIndex = 0;
+      score = 0;
+      answered = false;
+      summary = [];
+
+      prepareQuestions();
+
+      gameScreen.classList.remove("hidden");
+      resultScreen.classList.add("hidden");
+
+      renderQuestion();
+    }
+
+    nextBtn.addEventListener("click", nextQuestion);
+    restartBtn.addEventListener("click", startGame);
+
+    startGame();
+  </script>
+</body>
+</html>
